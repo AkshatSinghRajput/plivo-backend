@@ -1,4 +1,4 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
 from utils.database import connect_to_mongodb
 from utils.logger import logger
@@ -84,6 +84,61 @@ app.add_middleware(
 async def startup_event():
     logger.info("Connecting to MongoDB")
     connect_to_mongodb()  # Connect to MongoDB
+
+
+# @app.websocket("/updates")
+# async def websocket_endpoint(websocket: WebSocket):
+#     await websocket.accept()
+#     change_streams = []
+
+#     try:
+#         while True:
+#             data = await websocket.receive_json()
+
+#             # Validate input
+#             organization_id = data.get("organization_id")
+#             if not organization_id:
+#                 await websocket.send_text("Invalid organization_id")
+#                 continue
+
+#             # Connect to MongoDB and setup change streams
+#             db = connect_to_mongodb()
+#             db = db.Plivo
+#             option = {"full_document": "updateLookup"}
+
+#             async def watch_collection(collection_name):
+#                 try:
+#                     for change in db[collection_name].watch(
+#                         [
+#                             {
+#                                 "$match": {
+#                                     "$in": ["update", "insert"],
+#                                     "fullDocument.organization_id": organization_id,
+#                                 }
+#                             }
+#                         ],
+#                         **option,
+#                     ):
+#                         await websocket.send_text(f"update")
+#                 except PyMongoError as e:
+#                     await websocket.send_text(
+#                         f"Error in {collection_name} change stream: {e}"
+#                     )
+
+#             # Create tasks for watching collections concurrently
+#             change_streams = [
+#                 asyncio.create_task(watch_collection("Plivo.services")),
+#                 asyncio.create_task(watch_collection("Plivo.activities")),
+#             ]
+
+#             # Wait for all tasks to complete (will only complete on disconnect)
+#             await asyncio.gather(*change_streams)
+#     except WebSocketDisconnect:
+#         await websocket.close()
+#     finally:
+#         # Cancel all change streams on disconnect
+#         for stream in change_streams:
+#             stream.cancel()
 
 
 # Define a root endpoint

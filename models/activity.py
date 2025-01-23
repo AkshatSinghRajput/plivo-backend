@@ -4,6 +4,7 @@ from typing import Optional
 from utils.logger import logger
 from utils.database import connect_to_mongodb
 import pytz
+from app.sockets.sockets import manager
 
 
 class ActivityModel(BaseModel):
@@ -29,9 +30,12 @@ activity_collection = db.activities
 async def create_activity(activity: ActivityModel):
     try:
         created_activity = activity_collection.insert_one(
-            ActivityModel(**activity.dict()).dict()
+            ActivityModel(**activity.model_dump()).model_dump()
         )
         if created_activity:
+            ## Send the activity to the socket
+            await manager.broadcast("update", organization_id=activity.organization_id)
+
             logger.info("Activity created successfully ")
             return {"success": True, "message": "Activity created successfully"}
         logger.error("Activity creation failed")

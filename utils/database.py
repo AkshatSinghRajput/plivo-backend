@@ -1,5 +1,6 @@
 import pymongo
 from config.config import Config
+from bson.json_util import dumps
 
 
 def connect_to_mongodb():
@@ -7,6 +8,7 @@ def connect_to_mongodb():
     try:
         connection = pymongo.MongoClient(Config.DATABASE_URL)
         print("Connected to MongoDB")
+
         return connection
     except pymongo.errors.ConnectionFailure as e:
         print("Failed to connect to MongoDB: {}".format(e))

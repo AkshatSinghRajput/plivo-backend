@@ -1,7 +1,9 @@
-from fastapi import APIRouter, Header
+from fastapi import APIRouter, Header, WebSocket, WebSocketDisconnect, Query
 from fastapi.responses import JSONResponse
 from utils.logger import logger
 from models.publicPage import get_public_page_data
+from app.sockets.sockets import manager
+
 
 router = APIRouter()
 
@@ -30,3 +32,14 @@ async def get_public_page_data_route(organization_id: str):
     except Exception as e:
         logger.error(f"An error occurred: {str(e)}")
         return {"message": "An error occurred", "success": False}
+
+
+@router.websocket("/update")
+async def websocket_endpoint(websocket: WebSocket, organization_id: str = Query(...)):
+    await manager.connect(websocket, organization_id)
+    try:
+        while True:
+            data = await websocket.receive_text()
+
+    except WebSocketDisconnect:
+        manager.disconnect(websocket)

@@ -2,8 +2,10 @@ from pydantic import BaseModel, Field
 from datetime import datetime
 from typing import Optional
 from utils.database import connect_to_mongodb
+from models.activity import create_activity, ActivityModel
 from utils.logger import logger
 import pytz
+import uuid
 
 
 # Define the schema for the Service model using Pydantic
@@ -100,10 +102,38 @@ async def get_service_by_id(service_id: str, organization_id: str):
 async def update_service(service: ServiceSchema, organization_id: str):
     try:
         # Update the service with the given service ID and organization ID
+        # updated_service = services_collection.update_one(
+        #     {"service_id": service.service_id, "organization_id": organization_id},
+        #     {"$set": ServiceSchema(**service.dict()).dict()},
+        # )
+
+        current_service = await get_service_by_id(
+            service_id=service.service_id, organization_id=organization_id
+        )
+        if not current_service:
+            return {"success": False, "message": "Service not found"}
+
+        ## Check if the status is being updated from previous status
+        if current_service["data"]["service_status"] != service.service_status:
+            activity = await create_activity(
+                activity=ActivityModel(
+                    activity_id=str(uuid.uuid4()),
+                    action=service.service_status,
+                    actor_id=service.service_id,
+                    actor_type="service",
+                    organization_id=organization_id,
+                    activity_description=f"Service {service.service_name} updated with status {service.service_status}",
+                )
+            )
+            if not activity["success"]:
+                logger.error("Activity creation failed")
+                return {"success": False, "message": "Activity creation failed"}
+
         updated_service = services_collection.update_one(
             {"service_id": service.service_id, "organization_id": organization_id},
             {"$set": ServiceSchema(**service.dict()).dict()},
         )
+
         if updated_service:
             return {"success": True, "message": "Service updated successfully"}
         logger.error("Service update failed")
