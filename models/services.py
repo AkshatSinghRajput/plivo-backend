@@ -3,6 +3,7 @@ from datetime import datetime
 from typing import Optional
 from utils.database import connect_to_mongodb
 from utils.logger import logger
+import pytz
 
 
 # Define the schema for the Service model using Pydantic
@@ -17,7 +18,7 @@ class ServiceSchema(BaseModel):
         "Operational"  # Status of the service, default is "Operational"
     )
     start_date: Optional[datetime] = Field(
-        default_factory=datetime.now().isoformat
+        default_factory=datetime.now(tz=pytz.timezone("Asia/Kolkata")).isoformat
     )  # Start date, default is current time
 
 

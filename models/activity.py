@@ -3,6 +3,7 @@ from datetime import datetime
 from typing import Optional
 from utils.logger import logger
 from utils.database import connect_to_mongodb
+import pytz
 
 
 class ActivityModel(BaseModel):
@@ -12,7 +13,9 @@ class ActivityModel(BaseModel):
     activity_description: str = Field(..., min_length=1, max_length=255)
     actor_id: str = Field(..., min_length=1)
     actor_type: str = Field(..., min_length=1, max_length=255)
-    timestamp: Optional[datetime] = Field(default_factory=datetime.now().isoformat)
+    timestamp: Optional[datetime] = Field(
+        default_factory=datetime.now(tz=pytz.timezone("Asia/Kolkata")).isoformat
+    )
 
 
 # Connect to the Pilvo database
