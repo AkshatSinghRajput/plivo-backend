@@ -10,7 +10,6 @@ from app.services.serviceRoute import router as service_router
 from app.incident.incidentRoute import router as incident_router
 from app.maintenance.maintenanceRoute import router as maintenance_router
 from app.publicPage.publicRoutes import router as public_page_router
-import json
 
 
 # Create an instance of the FastAPI class
@@ -94,7 +93,7 @@ async def root():
     return {"message": "Welcome to the Stato-gram API"}
 
 
-@app.get("/api/v1/get-organization-id/{organization_slug}")
+@app.get("/api/v1/public-route/get-organization-id/{organization_slug}")
 async def get_organization_id(organization_slug: str):
     try:
         organization_data = await get_organization_data(organization_slug)
@@ -103,6 +102,7 @@ async def get_organization_id(organization_slug: str):
             return JSONResponse(
                 {"message": "Organization not found", "success": False}, status_code=404
             )
+
         return JSONResponse(
             {
                 "message": "Organization found",
@@ -112,28 +112,9 @@ async def get_organization_id(organization_slug: str):
         )
     except Exception as e:
         logger.error(f"An error occurred: {str(e)}")
-        return {"message": "An error occurred", "success": False}
-
-
-# @app.get("/api/v1/get-incidents-with-activities/{organization_id}")
-# async def get_incidents_with_activities_route(organization_id: str):
-#     try:
-#         incidents = await get_public_page_data(organization_id)
-#         if not incidents["success"]:
-#             return JSONResponse(
-#                 {"message": "Incidents fetch failed", "success": False}, status_code=404
-#             )
-
-#         return JSONResponse(
-#             {
-#                 "message": "Incidents fetched successfully",
-#                 "data": incidents["data"],
-#                 "success": True,
-#             }
-#         )
-#     except Exception as e:
-#         logger.error(f"An error occurred: {str(e)}")
-#         return {"message": "An error occurred", "success": False}
+        return JSONResponse(
+            {"message": "An error occurred", "success": False}, status_code=500
+        )
 
 
 ## Import the routers
