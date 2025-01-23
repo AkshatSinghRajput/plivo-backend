@@ -17,7 +17,7 @@ class ServiceSchema(BaseModel):
         "Operational"  # Status of the service, default is "Operational"
     )
     start_date: Optional[datetime] = Field(
-        default_factory=datetime.utcnow
+        default_factory=datetime.now().isoformat()
     )  # Start date, default is current time
 
 
