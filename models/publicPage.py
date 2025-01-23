@@ -18,6 +18,7 @@ class publicPageData(BaseModel):
     )  # Description of the service
     incident_type: str
     activities: list[ActivityModel]
+    service_impacted: list[str]
     created_at: datetime
 
 
@@ -73,6 +74,7 @@ async def get_incidents_with_activities(organization_id: str):
                     incident_description=incident["incident_description"],
                     incident_type="Incident",
                     activities=incident["activities"],
+                    service_impacted=incident["service_impacted"],
                     ## convert the date to iso format
                     created_at=incident["created_at"],
                 ).json()
@@ -135,6 +137,7 @@ async def get_maintenance_with_activities(organization_id: str):
                     incident_type="Maintenance",
                     activities=maintenance["activities"],
                     created_at=maintenance["start_from"],
+                    service_impacted=maintenance["service_impacted"],
                 ).json()
             )
             for maintenance in maintenance_data
