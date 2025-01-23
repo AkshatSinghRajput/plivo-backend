@@ -12,7 +12,7 @@ class ActivityModel(BaseModel):
     activity_description: str = Field(..., min_length=1, max_length=255)
     actor_id: str = Field(..., min_length=1)
     actor_type: str = Field(..., min_length=1, max_length=255)
-    timestamp: Optional[str] = Field(default_factory=datetime.now().isoformat())
+    timestamp: Optional[datetime] = Field(default_factory=datetime.now().isoformat)
 
 
 # Connect to the Pilvo database

@@ -22,7 +22,7 @@ class IncidentModel(BaseModel):
     )  # Description with length constraints
     incident_status: str = Field(default="Operational")  # Current status of incident
     created_at: Optional[datetime] = Field(
-        default_factory=datetime.now().isoformat()
+        default_factory=datetime.now().isoformat
     )  # Timestamp of creation
 
 
