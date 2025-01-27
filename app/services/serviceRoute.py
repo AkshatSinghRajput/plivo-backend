@@ -10,7 +10,6 @@ from models.services import (
 )
 from fastapi import Header
 from utils.logger import logger
-from models.activity import create_activity, ActivityModel
 
 router = APIRouter()
 

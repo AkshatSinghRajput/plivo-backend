@@ -22,6 +22,7 @@ class publicPageData(BaseModel):
     created_at: datetime
 
 
+# Connect to MongoDB and get collections
 db = connect_to_mongodb().Plivo
 incidents_collection = db.incidents
 activity_collection = db.activities
@@ -30,6 +31,7 @@ maintenance_collection = db.maintenance
 
 async def get_incidents_with_activities(organization_id: str):
     try:
+        # Fetch all incidents for the organization
         incidents = await get_all_incidents(organization_id)
         if not incidents["success"]:
             return {"success": False, "message": "Incidents fetch failed"}
@@ -37,6 +39,7 @@ async def get_incidents_with_activities(organization_id: str):
         incidents_data = incidents["data"]
 
         async def fetch_activities(incident):
+            # Fetch activities for a specific incident
             activities = await get_activity_by_actor_id(
                 incident["incident_id"], organization_id=organization_id
             )
@@ -59,12 +62,12 @@ async def get_incidents_with_activities(organization_id: str):
                 if incident["incident_id"] == result["incident_id"]:
                     incident["activities"] = result["activities"]
 
-        ## Convert the date to iso string in activities
+        # Convert the date to ISO string in activities
         for incident in incidents_data:
             for activity in incident["activities"]:
                 activity["timestamp"] = activity["timestamp"]
 
-        # convert the output into the desired format
+        # Convert the output into the desired format
         incidents_data = [
             json.loads(
                 publicPageData(
@@ -75,7 +78,6 @@ async def get_incidents_with_activities(organization_id: str):
                     incident_type="Incident",
                     activities=incident["activities"],
                     service_impacted=incident["service_impacted"],
-                    ## convert the date to iso format
                     created_at=incident["created_at"],
                 ).json()
             )
@@ -90,6 +92,7 @@ async def get_incidents_with_activities(organization_id: str):
 
 async def get_maintenance_with_activities(organization_id: str):
     try:
+        # Fetch all maintenance records for the organization
         maintenance = await get_all_maintenances(organization_id)
         if not maintenance["success"]:
             return {"success": False, "message": "Maintenance fetch failed"}
@@ -97,6 +100,7 @@ async def get_maintenance_with_activities(organization_id: str):
         maintenance_data = maintenance["data"]
 
         async def fetch_activities(maintenance):
+            # Fetch activities for a specific maintenance record
             activities = await get_activity_by_actor_id(
                 maintenance["maintenance_id"], organization_id=organization_id
             )
@@ -113,7 +117,7 @@ async def get_maintenance_with_activities(organization_id: str):
         ]
         activities_results = await asyncio.gather(*activities_tasks)
 
-        # Update maintenance with their activities
+        # Update maintenance records with their activities
         for result in activities_results:
             if result is None:
                 return {"success": False, "message": "Activities fetch failed"}
@@ -121,12 +125,12 @@ async def get_maintenance_with_activities(organization_id: str):
                 if maintenance["maintenance_id"] == result["maintenance_id"]:
                     maintenance["activities"] = result["activities"]
 
-        ## Convert the date to iso string in activities
+        # Convert the date to ISO string in activities
         for maintenance in maintenance_data:
             for activity in maintenance["activities"]:
                 activity["timestamp"] = activity["timestamp"]
 
-        # convert the output into the desired format
+        # Convert the output into the desired format
         maintenance_data = [
             json.loads(
                 publicPageData(

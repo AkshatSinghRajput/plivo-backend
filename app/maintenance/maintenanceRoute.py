@@ -13,11 +13,13 @@ from models.maintenance import (
 router = APIRouter()
 
 
+# Root endpoint
 @router.get("/")
 async def root():
     return {"message": "Welcome to Maintenance API"}
 
 
+# Endpoint to get all maintenances for a specific organization
 @router.get("/get-all-maintenances/{organizationId}")
 async def get_all_maintenances_route(organizationId: str):
     try:
@@ -47,6 +49,7 @@ async def get_all_maintenances_route(organizationId: str):
         )
 
 
+# Endpoint to get a specific maintenance by its ID and organization ID
 @router.get("/get-maintenance/{organizationId}/{maintenanceId}")
 async def get_maintenance_route(organizationId: str, maintenanceId: str):
     try:
@@ -77,6 +80,7 @@ async def get_maintenance_route(organizationId: str, maintenanceId: str):
         )
 
 
+# Endpoint to create a new maintenance record
 @router.post("/create-maintenance")
 async def create_maintenance_route(
     maintenance: Maintenance,
@@ -112,6 +116,7 @@ async def create_maintenance_route(
         )
 
 
+# Endpoint to update an existing maintenance record
 @router.post("/update-maintenance")
 async def update_maintenance_route(
     maintenance: Maintenance,
@@ -149,6 +154,7 @@ async def update_maintenance_route(
         )
 
 
+# Endpoint to delete a maintenance record by its ID
 @router.delete("/delete-maintenance/{maintenanceId}")
 async def delete_maintenance_route(
     maintenanceId: str, organizationId: str = Header(...)

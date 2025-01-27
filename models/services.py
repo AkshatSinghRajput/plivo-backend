@@ -1,10 +1,9 @@
 from pydantic import BaseModel, Field
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Optional
 from utils.database import connect_to_mongodb
 from models.activity import create_activity, ActivityModel
 from utils.logger import logger
-import pytz
 import uuid
 
 
@@ -20,7 +19,7 @@ class ServiceSchema(BaseModel):
         "Operational"  # Status of the service, default is "Operational"
     )
     start_date: Optional[datetime] = Field(
-        default_factory=datetime.now(tz=pytz.timezone("Asia/Kolkata")).isoformat
+        default_factory=(lambda: datetime.now(timezone.utc))
     )  # Start date, default is current time
 
 
@@ -34,7 +33,7 @@ async def create_service(service: ServiceSchema):
     try:
         # Insert the service into the collection
         created_service = services_collection.insert_one(
-            ServiceSchema(**service.dict()).dict()
+            ServiceSchema(**service.model_dump()).model_dump()
         )
         if created_service:
             return {"success": True, "message": "Service created successfully"}

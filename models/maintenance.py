@@ -7,6 +7,7 @@ from models.activity import create_activity, ActivityModel
 import uuid
 
 
+# Define the Maintenance model using Pydantic
 class Maintenance(BaseModel):
     maintenance_id: str = Field(..., unique=True)
     service_impacted: List[str] = Field(...)
@@ -18,12 +19,15 @@ class Maintenance(BaseModel):
     end_at: datetime = Field(...)
 
 
+# Connect to MongoDB and get the maintenances collection
 db = connect_to_mongodb().Plivo
 maintenance_collection = db.maintenances
 
 
+# Retrieve all maintenance records for a given organization
 async def get_all_maintenances(organization_id: str):
     try:
+        # Query maintenances collection excluding MongoDB _id field
         maintenances = maintenance_collection.find(
             {"organization_id": organization_id},
             {
@@ -31,6 +35,7 @@ async def get_all_maintenances(organization_id: str):
             },
         )
         if maintenances:
+            # Convert datetime objects to ISO format strings
             maintenances = [
                 {
                     **maintenance,
@@ -52,8 +57,10 @@ async def get_all_maintenances(organization_id: str):
         return {"success": False, "message": f"An error occurred: {str(e)}"}
 
 
+# Retrieve a specific maintenance record by ID and organization
 async def get_maintenance_by_id(maintenance_id: str, organization_id: str):
     try:
+        # Query for specific maintenance record
         maintenance = maintenance_collection.find_one(
             {"maintenance_id": maintenance_id, "organization_id": organization_id},
             {
@@ -61,6 +68,7 @@ async def get_maintenance_by_id(maintenance_id: str, organization_id: str):
             },
         )
         if maintenance:
+            # Convert datetime objects to ISO format
             maintenance["start_from"] = maintenance["start_from"].isoformat()
             maintenance["end_at"] = maintenance["end_at"].isoformat()
             return {
@@ -76,16 +84,18 @@ async def get_maintenance_by_id(maintenance_id: str, organization_id: str):
         return {"success": False, "message": f"An error occurred: {str(e)}"}
 
 
+# Create a new maintenance record and associated activity
 async def create_maintenance(maintenance: Maintenance):
     try:
+        # Insert new maintenance record
         created_maintenance = maintenance_collection.insert_one(
-            Maintenance(**maintenance.dict()).dict()
+            Maintenance(**maintenance.model_dump()).model_dump()
         )
         if not created_maintenance:
             logger.error("Maintenance creation failed")
             return {"success": False, "message": "Maintenance creation failed"}
 
-        ## Create an Activity
+        # Create an activity log for the new maintenance
         activity = await create_activity(
             ActivityModel(
                 activity_id=str(uuid.uuid4()),
@@ -111,8 +121,10 @@ async def create_maintenance(maintenance: Maintenance):
         return {"success": False, "message": f"An error occurred: {str(e)}"}
 
 
+# Update an existing maintenance record and log status changes
 async def update_maintenance(maintenance: Maintenance, organization_id: str):
     try:
+        # Verify maintenance exists
         current_maintenance = await get_maintenance_by_id(
             maintenance.maintenance_id, organization_id
         )
@@ -121,10 +133,8 @@ async def update_maintenance(maintenance: Maintenance, organization_id: str):
 
         current_maintenance = current_maintenance["data"]
 
-        ## Check if the maintenance status has changed
+        # Create activity log if maintenance status has changed
         if current_maintenance["maintenance_status"] != maintenance.maintenance_status:
-
-            ## Create an activity log
             activity = await create_activity(
                 ActivityModel(
                     activity_id=str(uuid.uuid4()),
@@ -140,6 +150,7 @@ async def update_maintenance(maintenance: Maintenance, organization_id: str):
                 logger.error("Activity creation failed")
                 return {"success": False, "message": "Activity creation failed"}
 
+        # Update maintenance record
         updated_maintenance = maintenance_collection.update_one(
             {"maintenance_id": maintenance.maintenance_id},
             {"$set": Maintenance(**maintenance.dict()).dict()},
@@ -157,8 +168,10 @@ async def update_maintenance(maintenance: Maintenance, organization_id: str):
         return {"success": False, "message": f"An error occurred: {str(e)}"}
 
 
+# Delete a maintenance record for a given organization
 async def delete_maintenance(maintenance_id: str, organization_id: str):
     try:
+        # Remove maintenance record
         deleted_maintenance = maintenance_collection.delete_one(
             {"maintenance_id": maintenance_id, "organization_id": organization_id}
         )

@@ -7,7 +7,7 @@ from utils.logger import logger
 from models.activity import create_activity, ActivityModel
 import uuid
 from typing import Optional
-import pytz
+from datetime import timezone
 
 
 # Define Incident data model using Pydantic
@@ -23,7 +23,7 @@ class IncidentModel(BaseModel):
     )  # Description with length constraints
     incident_status: str = Field(default="Operational")  # Current status of incident
     created_at: Optional[datetime] = Field(
-        default_factory=datetime.now(tz=pytz.timezone("Asia/Kolkata")).isoformat
+        default_factory=(lambda: datetime.now(timezone.utc))
     )  # Timestamp of creation
 
 
